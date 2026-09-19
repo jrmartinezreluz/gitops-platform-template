@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: hotel
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/example-org/gitops-platform-template.git
+        revision: main
+        files:
+          - path: clusters/*/*/hotel.yaml
+  template:
+    metadata:
+      name: "{{.cluster.name}}-hotel-{{ index .path.segments 2 }}"
+      labels:
+        app: hotel
+        cluster: "{{.cluster.name}}"
+        environment: "{{ index .path.segments 2 }}"
+    spec:
+      project: apps
+      sources:
+        - repoURL: https://github.com/example-org/helm-charts-template.git
+          targetRevision: v0.1.0
+          path: hotel
+          helm:
+            releaseName: hotel
+            valueFiles:
+              - $values/clusters/{{ index .path.segments 1 }}/{{ index .path.segments 2 }}/hotel.yaml
+        - repoURL: https://github.com/example-org/gitops-platform-template.git
+          targetRevision: main
+          ref: values
+      destination:
+        name: '{{.cluster.name}}'
+        namespace: '{{ if eq (index .path.segments 2) "production" }}hotel{{ else }}hotel-{{ index .path.segments 2 }}{{ end }}'
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas

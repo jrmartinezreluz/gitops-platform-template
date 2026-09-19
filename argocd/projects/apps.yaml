@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: apps
+  namespace: argocd
+spec:
+  description: Application workloads from the Helm charts repository
+  sourceRepos:
+    - https://github.com/example-org/helm-charts-template.git
+    - https://github.com/example-org/gitops-platform-template.git
+    - https://helm.erpnext.com
+  destinations:
+    - namespace: 'hotel*'
+      server: '*'
+    - namespace: 'erpnext*'
+      server: '*'
+    - namespace: 'n8n*'
+      server: '*'
+    - namespace: 'app-*'
+      server: '*'
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

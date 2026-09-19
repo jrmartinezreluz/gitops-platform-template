@@ -1,0 +1,12 @@
+cluster:
+  name: cluster-nonprod
+platform:
+  ingress:
+    host: n8n-dev.example.internal
+  externalSecrets:
+    env:
+      remoteRef:
+        key: apps/n8n/dev/env
+    db:
+      remoteRef:
+        key: apps/n8n/dev/db

@@ -1,0 +1,12 @@
+cluster:
+  name: cluster-nonprod
+platform:
+  ingress:
+    host: n8n-staging.example.internal
+  externalSecrets:
+    env:
+      remoteRef:
+        key: apps/n8n/staging/env
+    db:
+      remoteRef:
+        key: apps/n8n/staging/db

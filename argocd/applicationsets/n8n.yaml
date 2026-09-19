@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: n8n
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/example-org/gitops-platform-template.git
+        revision: main
+        files:
+          - path: clusters/*/*/n8n.yaml
+  template:
+    metadata:
+      name: "{{.cluster.name}}-n8n-{{ index .path.segments 2 }}"
+      labels:
+        app: n8n
+        cluster: "{{.cluster.name}}"
+        environment: "{{ index .path.segments 2 }}"
+    spec:
+      project: apps
+      sources:
+        - repoURL: https://github.com/example-org/helm-charts-template.git
+          targetRevision: v0.1.0
+          path: n8n
+          helm:
+            releaseName: n8n
+            valueFiles:
+              - $values/clusters/{{ index .path.segments 1 }}/{{ index .path.segments 2 }}/n8n.yaml
+        - repoURL: https://github.com/example-org/gitops-platform-template.git
+          targetRevision: main
+          ref: values
+      destination:
+        name: '{{.cluster.name}}'
+        namespace: '{{ if eq (index .path.segments 2) "production" }}n8n{{ else }}n8n-{{ index .path.segments 2 }}{{ end }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

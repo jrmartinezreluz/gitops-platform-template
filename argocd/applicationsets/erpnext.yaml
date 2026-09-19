@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: erpnext
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/example-org/gitops-platform-template.git
+        revision: main
+        files:
+          - path: clusters/*/*/erpnext.yaml
+  template:
+    metadata:
+      name: "{{.cluster.name}}-erpnext-{{ index .path.segments 2 }}"
+      labels:
+        app: erpnext
+        cluster: "{{.cluster.name}}"
+        environment: "{{ index .path.segments 2 }}"
+    spec:
+      project: apps
+      sources:
+        - repoURL: https://github.com/example-org/helm-charts-template.git
+          targetRevision: v0.1.0
+          path: erpnext
+          helm:
+            releaseName: erpnext
+            valueFiles:
+              - $values/clusters/{{ index .path.segments 1 }}/{{ index .path.segments 2 }}/erpnext.yaml
+        - repoURL: https://github.com/example-org/gitops-platform-template.git
+          targetRevision: main
+          ref: values
+      destination:
+        name: '{{.cluster.name}}'
+        namespace: '{{ if eq (index .path.segments 2) "production" }}erpnext{{ else }}erpnext-{{ index .path.segments 2 }}{{ end }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

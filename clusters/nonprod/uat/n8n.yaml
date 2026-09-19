@@ -1,0 +1,12 @@
+cluster:
+  name: cluster-nonprod
+platform:
+  ingress:
+    host: n8n-uat.example.internal
+  externalSecrets:
+    env:
+      remoteRef:
+        key: apps/n8n/uat/env
+    db:
+      remoteRef:
+        key: apps/n8n/uat/db

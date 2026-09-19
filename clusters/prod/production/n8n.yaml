@@ -1,0 +1,12 @@
+cluster:
+  name: cluster-prod
+platform:
+  ingress:
+    host: n8n.example.internal
+  externalSecrets:
+    env:
+      remoteRef:
+        key: apps/n8n/prod/env
+    db:
+      remoteRef:
+        key: apps/n8n/prod/db

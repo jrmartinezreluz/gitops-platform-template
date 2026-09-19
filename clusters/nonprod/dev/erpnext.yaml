@@ -1,0 +1,26 @@
+cluster:
+  name: cluster-nonprod
+erpnext:
+  image:
+    repository: 123456789012.dkr.ecr.us-east-1.amazonaws.com/nonprod/erpnext
+    tag: sha-example
+    digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  dbHost: db.example.internal
+frappe:
+  sites:
+    - siteName: erpnext-dev.example.internal
+      installApps:
+        - erpnext
+platform:
+  ingress:
+    host: erpnext-dev.example.internal
+  externalSecrets:
+    db:
+      remoteRef:
+        key: apps/erpnext/dev/db
+    admin:
+      remoteRef:
+        key: apps/erpnext/dev/admin
+    rdsMaster:
+      remoteRef:
+        key: apps/erpnext/rds-master

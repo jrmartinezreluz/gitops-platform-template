@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: generic-web
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/example-org/gitops-platform-template.git
+        revision: main
+        files:
+          - path: clusters/*/apps/*/*.yaml
+  template:
+    metadata:
+      name: "{{.cluster.name}}-{{ index .path.segments 3 }}-{{ .path.basenameNormalized }}"
+      labels:
+        app: "{{ index .path.segments 3 }}"
+        cluster: "{{.cluster.name}}"
+        environment: "{{ .path.basenameNormalized }}"
+    spec:
+      project: apps
+      sources:
+        - repoURL: https://github.com/example-org/helm-charts-template.git
+          targetRevision: v0.1.0
+          path: generic-web
+          helm:
+            releaseName: "{{ index .path.segments 3 }}"
+            valueFiles:
+              - $values/clusters/{{ index .path.segments 1 }}/apps/{{ index .path.segments 3 }}/{{ .path.filename }}
+        - repoURL: https://github.com/example-org/gitops-platform-template.git
+          targetRevision: main
+          ref: values
+      destination:
+        name: "{{.cluster.name}}"
+        namespace: "app-{{ index .path.segments 3 }}-{{ .path.basenameNormalized }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
